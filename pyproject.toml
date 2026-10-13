@@ -1,0 +1,33 @@
+[project]
+name = "project-ln"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Pedro Simões", email = "pedroalsim@gmail.com" }
+]
+requires-python = ">=3.14"
+dependencies = [
+    "nltk>=3.10.3",
+    "scikit-learn>=1.9.1",
+    "sentence-transformers>=6.1.0",
+    "tensorflow>=2.22.0rc0",
+    "torch>=2.14.1",
+]
+
+[project.scripts]
+project-ln = "project_ln:main"
+
+[build-system]
+requires = ["uv_build>=0.12.15,<0.13.0"]
+build-backend = "uv_build"
+
+# CPU-only PyTorch: the default wheels drag in ~2 GB of nvidia-* CUDA packages
+# that are useless on this (CPU-only) machine.
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }
