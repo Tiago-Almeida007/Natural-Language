@@ -1,0 +1,47 @@
+===== 5-fold CV (seed=42) =====
+accuracy=0.6452  macroF1=0.6426  minF1=0.4667
+
+Per-label metrics:
+label                         prec  recall      f1  support
+-----------------------------------------------------------
+Cardiovascular-Pulmonary     0.653   0.731   0.690      309
+Dermatology                  0.413   0.760   0.535       25
+Gastroenterology             0.611   0.733   0.667      195
+General Medicine             0.754   0.797   0.775      212
+Neurology                    0.584   0.511   0.545      184
+Neurosurgery                 0.348   0.709   0.467       79
+Obstetrics-Gynecology        0.647   0.809   0.719      136
+Ophthalmology                0.573   0.863   0.689       73
+Orthopedic                   0.625   0.690   0.656      300
+Psychiatry-Psychology        0.700   0.854   0.769       41
+Radiology                    0.581   0.563   0.572      222
+Surgery                      0.765   0.532   0.627      893
+
+Confusion matrix (rows=true, cols=predicted):
+                              c0    c1    c2    c3    c4    c5    c6    c7    c8    c9   c10   c11
+Cardiovascular-Pulmonary     226     0     0    20     0     0     1     0     0     0    21    41
+Dermatology                    0    19     0     3     0     0     0     0     0     0     0     3
+Gastroenterology               1     0   143    13     1     0     0     0     0     1    13    23
+General Medicine              18     7     1   169     6     0     0     0     2     3     1     5
+Neurology                      3     2     0     7    94    19     0     1    12    10    31     5
+Neurosurgery                   1     1     0     0     5    56     0     0     7     0     0     9
+Obstetrics-Gynecology          1     0     1     3     0     0   110     0     0     0     8    13
+Ophthalmology                  0     1     0     2     1     0     0    63     0     0     0     6
+Orthopedic                     0     1     0     4    11    32     0     0   207     0    13    32
+Psychiatry-Psychology          0     0     0     2     4     0     0     0     0    35     0     0
+Radiology                     23     1     1     0    39     0     8     0    16     0   125     9
+Surgery                       73    14    88     1     0    54    51    46    87     1     3   475
+
+Legend:
+  c0  = Cardiovascular-Pulmonary
+  c1  = Dermatology
+  c2  = Gastroenterology
+  c3  = General Medicine
+  c4  = Neurology
+  c5  = Neurosurgery
+  c6  = Obstetrics-Gynecology
+  c7  = Ophthalmology
+  c8  = Orthopedic
+  c9  = Psychiatry-Psychology
+  c10 = Radiology
+  c11 = Surgery

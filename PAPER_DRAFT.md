@@ -112,34 +112,58 @@ To ensure rigorous and reproducible evaluation across all model families, our ex
 | **Model 2e** | **Bio_ClinicalBERT (Recipe 6d)** | **Per-Field** | **BT (200) + SMOTE (500)** | **64.27%** | **0.6397** | **0.4659** |
 | **Model 3a** | Clinical-Longformer | Per-Field + Note | BT (200) + SMOTE (500) | 63.89% | 0.6368 | 0.4689 |
 
-### 5.2 Per-Label Performance & Confusion Matrix Analysis
+### 5.2 Per-Label Performance & Confusion Matrix
 
-[TODO: Insert per-label performance and confusion matrix discussion]
+**Table 3 - Per-label test/validation metrics for Model 2e (Recipe 6d, seed 42).**
 
-Recipe 6d achieves balanced performance across all 12 classes. *Surgery* F1 reaches 0.62 (recall improved from 0.34 to 0.52 due to augmentation), while minority classes like *Dermatology* and *Psychiatry-Psychology* maintain F1 scores well above the 0.25 threshold (0.46 and 0.51 respectively). Analysis of the confusion matrix reveals that errors are concentrated between anatomically or procedurally overlapping specialties (e.g., Neurosurgery confused with Orthopedic/Surgery).
+| Specialty | Precision | Recall | F1-Score | Support |
+|:---|---:|---:|---:|---:|
+| Cardiovascular-Pulmonary | 0.653 | 0.731 | 0.690 | 309 |
+| Dermatology | 0.413 | 0.760 | 0.535 | 25 |
+| Gastroenterology | 0.611 | 0.733 | 0.667 | 195 |
+| General Medicine | 0.754 | 0.797 | 0.775 | 212 |
+| Neurology | 0.584 | 0.511 | 0.545 | 184 |
+| Neurosurgery | 0.348 | 0.709 | 0.467 | 79 |
+| Obstetrics-Gynecology | 0.647 | 0.809 | 0.719 | 136 |
+| Ophthalmology | 0.573 | 0.863 | 0.689 | 73 |
+| Orthopedic | 0.625 | 0.690 | 0.656 | 300 |
+| Psychiatry-Psychology | 0.700 | 0.854 | 0.769 | 41 |
+| Radiology | 0.581 | 0.563 | 0.572 | 222 |
+| Surgery | 0.765 | 0.532 | 0.627 | 893 |
+| **Macro Average** | **0.605** | **0.713** | **0.643** | **2,669** |
+
+Figure 1 illustrates the full 12x12 confusion matrix corresponding to Table 3.
+
+![Confusion Matrix Heatmap](confusion_matrix.png)
 
 ---
 
 ## 6. Discussion & Error Analysis
 
-[TODO: Expand discussion and error analysis comparing model architectures against research question]
+### 6.1 Analysis of Per-Label Results
 
-Our results confirm that per-field dense representations combined with two-stage augmentation successfully answer our research question: preserving field identity prevents narrative noise dilution, while BT+SMOTE rescues minority recall.
+Examining the per-label metrics and confusion matrix reveals several notable patterns regarding dataset support and inter-specialty boundaries:
 
-### 6.3 Concrete Error Analysis (Misclassified Validation Instances)
+- **Support vs. Performance:** Interestingly, raw training support does not strictly dictate F1 performance. While *Surgery* commands the largest support ($N = 893$), its F1 score settles at $0.627$ with a lower recall of $0.532$, which could suggest that its broad procedural scope overlaps extensively with neighboring surgical specialties. Conversely, minority classes with very modest support—such as *Psychiatry-Psychology* ($N = 41$, F1 $0.769$) and *Obstetrics-Gynecology* ($N = 136$, F1 $0.719$)—achieve high metrics, which may indicate that their clinical vocabulary is exceptionally distinct and well-separated in the embedding space.
+- **Lower-Metric Confusion Patterns:** The classes exhibiting the lowest F1 scores are *Neurosurgery* (F1 $0.467$, Precision $0.348$), *Neurology* (F1 $0.545$), and *Radiology* (F1 $0.572$). The low precision for *Neurosurgery* appears to stem from procedural overlaps, where spinal cases from *Orthopedic* surgery ($32$ cases) and general *Surgery* ($54$ cases) are predicted as *Neurosurgery*. Similarly, *Radiology* appears to function as a semantic crossroads, leaking into *Neurology* ($39$ cases) and *Cardiovascular-Pulmonary* ($23$ cases), which may reflect the cross-system nature of imaging descriptions.
 
-To demonstrate qualitative understanding, we examine three out-of-fold misclassifications:
-1. **Case A (True: Neurosurgery, Predicted: Orthopedic):** *Excerpt:* "L4-L5 decompressive laminectomy and instrumented fusion." *Interpretation:* Because the short fields name surgical instrumentation rather than neural structures, the model associates the procedure with spinal orthopedic surgery.
-2. **Case B (True: Gastroenterology, Predicted: General Medicine):** *Excerpt:* "Diagnostic colonoscopy with multiple random mucosal biopsies." *Interpretation:* General gastrointestinal screening lacks disease-specific keywords, leading the classifier to default to General Medicine.
-3. **Case C (True: Obstetrics-Gynecology, Predicted: Surgery):** *Excerpt:* "Total abdominal hysterectomy and bilateral salpingo-oophorectomy." *Interpretation:* Major abdominal procedures share dense surgical terminology with general surgery, overshadowing specialty-specific anatomy terms in `keywords`.
+### 6.2 Connection to Data Analysis (§2)
+
+These confusion patterns directly align with our findings from the Data Analysis section. Because short `description` fields often summarize procedures through shared instrumentation vocabulary (such as "decompressive laminectomy and instrumented fusion" appearing across both Neurosurgery and Orthopedic surgery) without explicitly naming the underlying organ system, linear classifiers may struggle to disambiguate adjacent medical specialties using concise metadata alone.
+
+### 6.3 Error Analysis & Inter-Specialty Overlap
+
+Analysis of out-of-fold misclassifications shows that errors are not distributed uniformly across the board; rather, they cluster tightly into procedurally related groups. Surgical subspecialties share dense instrumentation and procedural terminology, leading the model to distribute *Surgery* errors across *Gastroenterology* ($88$ cases), *Orthopedic* ($87$ cases), and *Cardiovascular-Pulmonary* ($73$ cases). This confirms that feature representations remain sensitive to shared procedural verbs when anatomical signposts are sparse.
 
 ---
 
 ## 7. Future Work
 
-[TODO: Finalize future work directions]
+Building upon our frozen dense embedding and two-stage augmentation pipeline, several promising directions remain for future work:
 
-Given more time, we would explore domain-specific fine-tuning of Bio_ClinicalBERT on unlabelled clinical corpora, hierarchical classification structures (grouping surgical subspecialties first), and transformer-based data augmentation (e.g., generative LLM paraphrasing).
+1. **End-to-End Fine-Tuning:** While our frozen feature-extraction approach offered an exceptionally fast iteration cycle and robust performance, full end-to-end fine-tuning of `Bio_ClinicalBERT` directly on the clinical corpus is an obvious next step. Because full fine-tuning demands substantial computational resources and training time, it was beyond the scope of this project, but it would allow the model to adapt its lower-level attention weights directly to medical terminology.
+2. **Hierarchical Classification:** Given that our confusion matrix demonstrated heavy error clustering among surgical subspecialties (e.g., Neurosurgery and Orthopedic surgery), implementing a hierarchical classification structure—such as first predicting broad clinical categories (surgical vs. medical vs. imaging) and then classifying subspecialties—could resolve fine-grained ambiguities.
+3. **Generative LLM Data Augmentation:** Beyond text-level back-translation and embedding SMOTE, leveraging instruction-tuned medical language models to generate synthetic patient narratives for extremely rare minority classes (such as Dermatology) could provide richer lexical diversity.
 
 ---
 

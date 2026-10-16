@@ -111,6 +111,21 @@ def main():
         default=0,
         help="--model bert: 0 = single 90/10 split; K>1 = K-fold stratified CV (cheap: embeddings are cached)",
     )
+    parser.add_argument(
+        "--confusion-out",
+        default=None,
+        help="path to write the per-label metrics and the confusion matrix (rows=true, cols=predicted) as a text file; default off",
+    )
+    parser.add_argument(
+        "--confusion-plot",
+        default=None,
+        help="path to write the confusion matrix as a 300-DPI PNG heatmap; default off",
+    )
+    parser.add_argument(
+        "--error-dump",
+        default=None,
+        help="path to write misclassified out-of-fold rows (tsv: true, pred, sample_name, description, keywords); --model bert only",
+    )
     args = parser.parse_args()
 
     if args.model in ("nb", "naive_bayes") and args.augment.startswith("embed"):

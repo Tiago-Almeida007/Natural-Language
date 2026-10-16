@@ -244,6 +244,24 @@ def _fit_predict(X_train, y_train, X_val):
     return clf.predict(X_val)
 
 
+def _dump_errors(path, rows, labels, oof_pred, names):
+    """Write every misclassified out-of-fold row to a tsv for inspection.
+
+    Keeps the true and predicted specialty plus the three concise fields, so
+    real misclassifications can be quoted in the paper instead of invented.
+    """
+    with open(path, "w", encoding="utf-8") as fh:
+        fh.write("true\tpred\tsample_name\tdescription\tkeywords\n")
+        for i in range(len(rows)):
+            if labels[i] == oof_pred[i]:
+                continue
+            fields = [names[labels[i]], names[oof_pred[i]]]
+            for field in ("sample_name", "description", "keywords"):
+                fields.append(rows[i][field].replace("\t", " ").replace("\n", " "))
+            fh.write("\t".join(fields) + "\n")
+    print(f"[errors] misclassified rows written to {path}")
+
+
 def run_experiment(args):
     rows = load_rows()
     labels, names = encode_labels([r["label"] for r in rows])
@@ -295,8 +313,12 @@ def run_experiment(args):
                 )
                 oof_pred[idx_val] = _fit_predict(X_train, y_train, X_all[idx_val])
             acc, macro, min_f1 = report(
-                labels, oof_pred, names, f"{n_splits}-fold CV (seed={seed})"
+                labels, oof_pred, names, f"{n_splits}-fold CV (seed={seed})",
+                out_path=args.confusion_out if seed == seeds[0] else None,
+                plot_path=args.confusion_plot if seed == seeds[0] else None,
             )
+            if args.error_dump and seed == seeds[0]:
+                _dump_errors(args.error_dump, rows, labels, oof_pred, names)
         else:
             idx_train, idx_val = train_test_split(
                 np.arange(len(rows)),
@@ -309,7 +331,9 @@ def run_experiment(args):
             )
             pred = _fit_predict(X_train, y_train, X_all[idx_val])
             acc, macro, min_f1 = report(
-                labels[idx_val], pred, names, f"90/10 split (seed={seed})"
+                labels[idx_val], pred, names, f"90/10 split (seed={seed})",
+                out_path=args.confusion_out if seed == seeds[0] else None,
+                plot_path=args.confusion_plot if seed == seeds[0] else None,
             )
         scores.append((acc, macro, min_f1))
 
