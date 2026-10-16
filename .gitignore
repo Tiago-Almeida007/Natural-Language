@@ -11,7 +11,6 @@ wheels/
 labs/
 .ruff_cache/
 AGENTS.md
-PAPER_DRAFT.md
 
 # Embedding caches are regenerable and large; the back-translation dataset is a
 # project deliverable (PDF: "eventual datasets gathered to the project") and is
